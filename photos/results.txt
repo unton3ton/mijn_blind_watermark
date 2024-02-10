@@ -1,0 +1,42 @@
+
+for photos/Embedded\1_compression_100_d1_6_d2_6 = 
+ A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+
+
+for photos/Embedded\2_compression_100_d1_6_d2_6 = 
+ A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+
+
+for photos/Embedded\3_compression_100_d1_6_d2_6 = 
+ A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+
+
+for photos/Embedded\4_compression_100_d1_6_d2_6 = 
+ A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+
+
+for photos/Embedded\5_compression_100_d1_6_d2_6 = 
+ A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+
+
+for photos/Embedded\6_compression_100_d1_6_d2_6 = 
+ A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+A watermark is 2 phonenumbers:
++7 999 888 77 66 +1 222 333 44 55
+
