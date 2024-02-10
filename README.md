@@ -1,29 +1,4 @@
-
-
-
-# blind-watermark
-
-Blind watermark based on DWT-DCT-SVD.
-
-
-[![PyPI](https://img.shields.io/pypi/v/blind_watermark)](https://pypi.org/project/blind_watermark/)
-[![Build Status](https://travis-ci.com/guofei9987/blind_watermark.svg?branch=master)](https://travis-ci.com/guofei9987/blind_watermark)
-[![codecov](https://codecov.io/gh/guofei9987/blind_watermark/branch/master/graph/badge.svg)](https://codecov.io/gh/guofei9987/blind_watermark)
-[![License](https://img.shields.io/pypi/l/blind_watermark.svg)](https://github.com/guofei9987/blind_watermark/blob/master/LICENSE)
-![Python](https://img.shields.io/badge/python->=3.5-green.svg)
-![Platform](https://img.shields.io/badge/platform-windows%20|%20linux%20|%20macos-green.svg)
-[![stars](https://img.shields.io/github/stars/guofei9987/blind_watermark.svg?style=social)](https://github.com/guofei9987/blind_watermark/)
-[![fork](https://img.shields.io/github/forks/guofei9987/blind_watermark?style=social)](https://github.com/guofei9987/blind_watermark/fork)
-[![Downloads](https://pepy.tech/badge/blind-watermark)](https://pepy.tech/project/blind-watermark)
-[![Discussions](https://img.shields.io/badge/discussions-green.svg)](https://github.com/guofei9987/blind_watermark/discussions)
-
-
-- **Documentation:** [https://BlindWatermark.github.io/blind_watermark/#/en/](https://BlindWatermark.github.io/blind_watermark/#/en/)
-- **文档：** [https://BlindWatermark.github.io/blind_watermark/#/zh/](https://BlindWatermark.github.io/blind_watermark/#/zh/)  
-- **中文 readme** [README_cn.md](README_cn.md)
-- **Source code:** [https://github.com/guofei9987/blind_watermark](https://github.com/guofei9987/blind_watermark)
-
-
+## Blind watermark based on DWT-DCT-SVD.
 
 # install
 ```bash
@@ -32,146 +7,117 @@ pip install blind-watermark
 
 For the current developer version:
 ```bach
-git clone git@github.com:guofei9987/blind_watermark.git
-cd blind_watermark
+git clone git@github.com:unton3ton/mijn_blind_watermark.git
+cd mijn_blind_watermark
 pip install .
 ```
 
 # How to use
 
 
-## Use in bash
-
-
-```bash
-# embed watermark into image:
-blind_watermark --embed --pwd 1234 examples/pic/ori_img.jpeg "watermark text" examples/output/embedded.png
-# extract watermark from image:
-blind_watermark --extract --pwd 1234 --wm_shape 111 examples/output/embedded.png
-```
-
-
-
 ## Use in Python
 
-Original Image + Watermark = Watermarked Image
-
-![origin_image](docs/原图.jpeg) + '@guofei9987 开源万岁！' = ![打上水印的图](docs/打上水印的图.jpg)
-
-
-See the [codes](/examples/example_str.py)
 
 Embed watermark:
 ```python
+import os 
 from blind_watermark import WaterMark
 
-bwm1 = WaterMark(password_img=1, password_wm=1)
-bwm1.read_img('pic/ori_img.jpg')
-wm = '@guofei9987 开源万岁！'
-bwm1.read_wm(wm, mode='str')
-bwm1.embed('output/embedded.png')
-len_wm = len(bwm1.wm_bit)
-print('Put down the length of wm_bit {len_wm}'.format(len_wm=len_wm))
+
+def lenght_watermark(img_name, watermark, passwordwm=1):
+    bwm1 = WaterMark(password_img=1, password_wm=passwordwm) # mode='common' vs mode='multithreading'
+    bwm1.read_img(f'{path}/{img_name}')
+    bwm1.read_wm(watermark, mode='str')
+    len_wm = len(bwm1.wm_bit)
+    return len_wm
+
+def embed_watermark(img_name, watermark, passwordwm=1, compression_ratio=100, d1 = 9, d2 = 7, fast_mode = True, n = 3):
+    bwm1 = WaterMark(password_img=1, password_wm=passwordwm, mode='common', d1 = d1, d2 = d2, fast_mode = fast_mode, n = n) 
+    bwm1.read_img(f'{path}/{img_name}')
+    bwm1.read_wm(watermark, mode='str')
+    bwm1.embed(f'{path}/Embedded/{img_name[:-4]}_compression_{compression_ratio}_d1_{d1}_d2_{d2}.jpg', compression_ratio=compression_ratio)
+
+
+path = "photos/"
+
+password_wm = 123456789
+
+# wm = '99'
+with open('original.txt','r', encoding="utf-8") as f:
+    wm = f.read()
+
+times = 2
+print(wm*times)
+
+d1 = d2 = 6
+
+for i in range(1,7):
+    name = f'{i}.jpg'
+    print(f'lwm = {lenght_watermark(name, wm*times)}') # 519 for times = 1; 1559 for times = 3
+    embed_watermark(name, wm*times, password_wm, d1 = d1, d2 = d2)
 ```
 
 Extract watermark:
 ```python
-bwm1 = WaterMark(password_img=1, password_wm=1)
-wm_extract = bwm1.extract('output/embedded.png', wm_shape=len_wm, mode='str')
-print(wm_extract)
+import os 
+from PIL import Image
+from blind_watermark import WaterMark
+import glob
+
+def extract_watermark(img_name, lenght_watermark, passwordwm=1, d1 = 9, d2 = 7, fast_mode = True, n = 3):
+    bwm1 = WaterMark(password_img=1, password_wm=passwordwm, mode='common', d1 = d1, d2 = d2, fast_mode = fast_mode, n = n)
+    wm_extract = bwm1.extract(img_name, wm_shape=lenght_watermark, mode='str')
+    return wm_extract
+
+
+with open('photos/results.txt','w', encoding="utf-8") as f:
+
+    images = glob.glob("photos/Embedded/*.jpg") 
+    # images = glob.glob("photos/fromTelegram/*.jpg")
+
+    d1 = d2 = 6
+
+    for name in images:
+        try:
+            print(f'for {name[:-4]} = \n {extract_watermark(name, lenght_watermark=1039, passwordwm=123456789, d1 = d1, d2 = d2)}\n')
+            f.write(f'\nfor {name[:-4]} = \n {extract_watermark(name, lenght_watermark=1039, passwordwm=123456789, d1 = 6, d2 = 6)}\n')
+        except ValueError:
+            print(f"ValueError: non-hexadecimal number found in fromhex() arg at position 127 for file = {name[:-4]}\n")
+            f.write(f"\nValueError: non-hexadecimal number found in fromhex() arg at position 127 for file = {name[:-4]}\n")
+        finally:
+            continue
 ```
-Output:
->@guofei9987 开源万岁！
-
-### attacks on Watermarked Image
 
 
-|attack method|image after attack|extracted watermark|
-|--|--|--|
-|Rotate 45 Degrees|![旋转攻击](docs/旋转攻击.jpg)|'@guofei9987 开源万岁！'|
-|Random crop|![截屏攻击](docs/截屏攻击2_还原.jpg)|'@guofei9987 开源万岁！'|
-|Masks| ![多遮挡攻击](docs/多遮挡攻击.jpg) |'@guofei9987 开源万岁！'|
-|Vertical cut|![横向裁剪攻击](docs/横向裁剪攻击_填补.jpg)|'@guofei9987 开源万岁！'|
-|Horizontal cut|![纵向裁剪攻击](docs/纵向裁剪攻击_填补.jpg)|'@guofei9987 开源万岁！'|
-|Resize|![缩放攻击](docs/缩放攻击.jpg)|'@guofei9987 开源万岁！'|
-|Pepper Noise|![椒盐攻击](docs/椒盐攻击.jpg)|'@guofei9987 开源万岁！'|
-|Brightness 10% Down|![亮度攻击](docs/亮度攻击.jpg)|'@guofei9987 开源万岁！'|
-
-
-
-
-
-
-### embed images
+### embed bits
 
 embed watermark:
 ```python
-from blind_watermark import WaterMark
+import bitarray
 
-bwm1 = WaterMark(password_wm=1, password_img=1)
-# read original image
-bwm1.read_img('pic/ori_img.jpg')
-# read watermark
-bwm1.read_wm('pic/watermark.png')
-# embed
-bwm1.embed('output/embedded.png')
+wm = '012345678910'
+
+times = 1
+print(wm*times)
+
+ba = bitarray.bitarray()
+ba.frombytes(wm.encode('utf-8'))
+print(ba) # bitarray('001100000011000100110010001100110011010000110101001101100011011100111000001110010011000100110000')
 ```
 
 
 Extract watermark:
 ```python
-bwm1 = WaterMark(password_wm=1, password_img=1)
-# notice that wm_shape is necessary
-bwm1.extract(filename='output/embedded.png', wm_shape=(128, 128), out_wm_name='output/extracted.png', )
+wm_bit = extract_watermark(name, lenght_watermark=12, passwordwm=123456789, d1 = d1, d2 = d2)
+wm_text = wm_bit.tobytes().decode('utf-8')
 ```
 
 
-|attack method|image after attack|extracted watermark|
-|--|--|--|
-|Rotate 45 Degrees|![旋转攻击](docs/旋转攻击.jpg)|![](docs/旋转攻击_提取水印.png)|
-|Random crop|![截屏攻击](docs/截屏攻击2_还原.jpg)|![多遮挡_提取水印](docs/多遮挡攻击_提取水印.png)|
-|Mask| ![多遮挡攻击](docs/多遮挡攻击.jpg) |![多遮挡_提取水印](docs/多遮挡攻击_提取水印.png)|
+## Sources
 
-
-### embed array of bits
-
-See it [here](/examples/example_bit.py)
-
-
-As demo, we embed 6 bytes data:
-```python
-wm = [True, False, True, True, True, False]
-```
-
-Embed:
-```python
-from blind_watermark import WaterMark
-
-bwm1 = WaterMark(password_img=1, password_wm=1)
-bwm1.read_ori_img('pic/ori_img.jpg')
-bwm1.read_wm([True, False, True, True, True, False], mode='bit')
-bwm1.embed('output/embedded.png')
-```
-
-Extract:
-```python
-bwm1 = WaterMark(password_img=1, password_wm=1, wm_shape=6)
-wm_extract = bwm1.extract('output/打上水印的图.png', mode='bit')
-print(wm_extract)
-```
-Notice that `wm_shape` (shape of watermark) is necessary
-
-The output `wm_extract` is an array of float. set a threshold such as 0.5.
-
-
-# Concurrency
-
-```python
-WaterMark(..., processes=None)
-```
-- `processes` number of processes, can be integer. Default `None`, which means using all processes.  
-
-## Related Project
-
-- text_blind_watermark (Embed message into text): [https://github.com/guofei9987/text_blind_watermark](https://github.com/guofei9987/text_blind_watermark)  
-- HideInfo（hide as image, hide as sounds, hide as text）：[https://github.com/guofei9987/HideInfo](https://github.com/guofei9987/HideInfo)
+* [Ma3shka](https://github.com/unton3ton/Ma3shka)
+* [Как уменьшить количество измерений и извлечь из этого пользу](https://habr.com/ru/articles/275273/)
+* [Singular Value Decomposition (SVD)](https://www.geeksforgeeks.org/singular-value-decomposition-svd/)
+* [bitarray 2.9.2](https://pypi.org/project/bitarray/)
+* [Convert string to list of bits and viceversa](https://stackoverflow.com/questions/10237926/convert-string-to-list-of-bits-and-viceversa)
+* [in-search-of-incredible-difference](https://github.com/tonypithony/in-search-of-incredible-difference)
