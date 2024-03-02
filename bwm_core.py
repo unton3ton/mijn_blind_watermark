@@ -10,7 +10,8 @@ class WaterMarkCore:
         self.n = n
         self.block_shape = np.array([self.n, self.n])#([4, 4])
         self.password_img = password_img
-        self.d1, self.d2 = d1, d2 # 36, 20  # d1/d2 越大鲁棒性越强,但输出图片的失真越大
+        self.d1, self.d2 = d1, d2  # интервалы квантования
+        # 36, 20  # d1/d2 越大鲁棒性越强,但输出图片的失真越大
         # Чем больше размер, тем выше стойкость, но тем больше искажается выходное изображение.
         # init data
         self.img, self.img_YUV = None, None  # self.img 是原图，self.img_YUV 对像素做了加白偶数化 = исходное изображение, self.img_YUV отбеливает и выравнивает пиксели
@@ -68,24 +69,28 @@ class WaterMarkCore:
             return self.block_add_wm_slow(arg)
 
     def block_add_wm_slow(self, arg):
-        block, shuffler, i = arg
+        # block, shuffler, i = arg
+        block, _ , i = arg
         # dct->(flatten->加密->逆flatten)->svd->打水印->逆svd->(flatten->解密->逆flatten)->逆dct
         # dct->(flatten->encrypt->inverse flatten)->svd->watermark->inverse svd->(flatten->decrypt->inverse flatten)->inverse dct
         wm_1 = self.wm_bit[i % self.wm_size]
         block_dct = dct(block)
         # 加密（打乱顺序）= Шифрование (не по порядку)
-        block_dct_shuffled = block_dct.flatten()[shuffler].reshape(self.block_shape)
+        # block_dct_shuffled = block_dct.flatten()[shuffler].reshape(self.block_shape)
+        block_dct_shuffled = block_dct.reshape(self.block_shape)
         u, s, v = svd(block_dct_shuffled)
         s[0] = (s[0] // self.d1 + 1 / 4 + 1 / 2 * wm_1) * self.d1
         if self.d2:
             s[1] = (s[1] // self.d2 + 1 / 4 + 1 / 2 * wm_1) * self.d2
-        block_dct_flatten = np.dot(u, np.dot(np.diag(s), v)).flatten()
-        block_dct_flatten[shuffler] = block_dct_flatten.copy()
+        block_dct_flatten = np.dot(u, np.dot(np.diag(s), v))#.flatten()
+        # block_dct_flatten[shuffler] = block_dct_flatten.copy()
+        block_dct_flatten = block_dct_flatten
         return idct(block_dct_flatten.reshape(self.block_shape))
 
     def block_add_wm_fast(self, arg):
         # dct->svd->打水印->逆svd->逆dct = dct->svd->watermark->reverse svd->reverse dct
-        block, shuffler, i = arg
+        # block, shuffler, i = arg
+        block, _ , i = arg
         wm_1 = self.wm_bit[i % self.wm_size] # "мигалка" = Бу́лева фу́нкция (или логи́ческая функция)
         # print(f'wm_1 = {wm_1}') # True или False
 
@@ -146,9 +151,13 @@ class WaterMarkCore:
             return self.block_get_wm_slow(args)
 
     def block_get_wm_slow(self, args):
-        block, shuffler = args
+        # block, shuffler = args
+        block, _ = args
         # dct->flatten->加密->逆flatten->svd->解水印 = dct->flatten->encrypt->inverse flatten->svd->unwatermark
-        block_dct_shuffled = dct(block).flatten()[shuffler].reshape(self.block_shape)
+        
+        # block_dct_shuffled = dct(block).flatten()[shuffler].reshape(self.block_shape)
+        block_dct_shuffled = dct(block).reshape(self.block_shape)
+
         u, s, v = svd(block_dct_shuffled)
         wm = (s[0] % self.d1 > self.d1 / 2) * 1
         if self.d2:
@@ -157,7 +166,8 @@ class WaterMarkCore:
         return wm
 
     def block_get_wm_fast(self, args):
-        block, shuffler = args
+        # block, shuffler = args
+        block, _ = args
         # dct->svd->解水印 = dct->svd->unwatermark
         u, s, v = svd(dct(block))
         wm = (s[0] % self.d1 > self.d1 / 2)  # wm = 0 or wm = 1
